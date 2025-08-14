@@ -24,14 +24,15 @@ const USE_NEWSAPI = true; // Переключатель между Currents API 
 // Определяем базовый URL в зависимости от окружения
 const getBaseUrl = () => {
   const isProduction = import.meta.env.PROD;
-  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isDevelopment = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   
   if (isDevelopment && !isProduction) {
-    // В разработке используем прокси
+    // В разработке используем Vite прокси
     return USE_NEWSAPI ? "/newsapi/v2" : "/api/v1";
   } else {
-    // В продакшене используем прямые URL
-    return USE_NEWSAPI ? "https://newsapi.org/v2" : "https://api.currentsapi.services/v1";
+    // В продакшене используем наш Vercel API прокси
+    return USE_NEWSAPI ? "/api" : "https://api.currentsapi.services/v1";
   }
 };
 
@@ -151,50 +152,80 @@ function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
 export async function getNews(params: { language?: string; page_size?: number; page?: number } = {}) {
   const { language = 'en', page_size = 20, page = 1 } = params;
 
-  // Временно используем только демо-данные из-за ограничений NewsAPI Developer plan
-  const isProduction = import.meta.env.PROD;
-  if (isProduction) {
-    console.log('Using demo data in production due to NewsAPI limitations');
-    return generateFallbackNews(page_size);
-  }
-
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    console.error("Missing Currents API key. Set VITE_NEWS_API_KEY in .env file.");
-    return generateFallbackNews(page_size);
-  }
-
   try {
-    const endpoint = USE_NEWSAPI ? 'top-headlines' : 'latest-news';
-    const params = USE_NEWSAPI 
-      ? { apiKey, pageSize: page_size, page, country: 'us' }
-      : { apiKey, page_size, page, language };
-    
-    console.log('Making request to:', `${BASE_URL}/${endpoint}`);
-    console.log('With params:', { ...params, apiKey: apiKey ? '***hidden***' : 'missing' });
-    
-    const res = await axios.get(`${BASE_URL}/${endpoint}`, {
-      timeout: 10000,
-      params,
-    });
-    
-    console.log('Response:', res.data);
-    
-    // NewsAPI возвращает articles, Currents API возвращает news
-    const articles = USE_NEWSAPI ? res.data.articles : res.data.news;
-    return articles ?? [];
+    const isProduction = import.meta.env.PROD;
+    const isDevelopment = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    if (USE_NEWSAPI) {
+      if (isDevelopment && !isProduction) {
+        // В разработке используем Vite прокси к NewsAPI
+        const apiKey = getApiKey();
+        if (!apiKey) {
+          console.error("Missing NewsAPI key. Set VITE_NEWS_API_KEY in .env file.");
+          return generateFallbackNews(page_size);
+        }
+
+        const endpoint = 'top-headlines';
+        const requestParams = { apiKey, pageSize: page_size, page, country: 'us' };
+        
+        console.log('Making request to:', `${BASE_URL}/${endpoint}`);
+        console.log('With params:', { ...requestParams, apiKey: '***hidden***' });
+        
+        const res = await axios.get(`${BASE_URL}/${endpoint}`, {
+          timeout: 10000,
+          params: requestParams,
+        });
+        
+        console.log('Response:', res.data);
+        return res.data.articles ?? [];
+        
+      } else {
+        // В продакшене используем наш Vercel API прокси
+        const endpoint = 'news'; // наш API endpoint
+        const requestParams = { pageSize: page_size, page, country: 'us' };
+        
+        console.log('Making request to:', `${BASE_URL}/${endpoint}`);
+        console.log('With params:', requestParams);
+        
+        const res = await axios.get(`${BASE_URL}/${endpoint}`, {
+          timeout: 10000,
+          params: requestParams,
+        });
+        
+        console.log('Response:', res.data);
+        return res.data.articles ?? [];
+      }
+    } else {
+      // Currents API логика (если нужна)
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        console.error("Missing Currents API key.");
+        return generateFallbackNews(page_size);
+      }
+
+      const endpoint = 'latest-news';
+      const requestParams = { apiKey, page_size, page, language };
+      
+      const res = await axios.get(`${BASE_URL}/${endpoint}`, {
+        timeout: 10000,
+        params: requestParams,
+      });
+      
+      return res.data.news ?? [];
+    }
   } catch (err) {
     const e = err as AxiosError<{ message?: string }>;
     console.error('Full error:', err);
-    console.error(`Currents API error: ${e.response?.data?.message || e.message || "Request failed"}`);
+    console.error(`API error: ${e.response?.data?.message || e.message || "Request failed"}`);
     
     // Если 429 (Too Many Requests), сообщаем об ошибке
     if (e.response?.status === 429) {
       console.error('API rate limit exceeded. Please wait or check your API plan.');
     }
     
-    // В случае ошибки возвращаем фиктивные данные для демонстрации
-    console.log('Returning fallback demo data...');
+    // В случае ошибки возвращаем фиктивные данные
+    console.log('Returning fallback demo data due to API error...');
     return generateFallbackNews(page_size);
   }
 }

@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/*.ts": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "env": {
+    "VITE_NEWS_API_KEY": "@vite-news-api-key"
+  }
+}
