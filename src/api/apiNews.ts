@@ -20,7 +20,20 @@ export interface CurrentsNewsItem {
 
 // Можно переключаться между API
 const USE_NEWSAPI = true; // Переключатель между Currents API и NewsAPI
-const BASE_URL = USE_NEWSAPI ? "/newsapi/v2" : "/api/v1";
+
+// Определяем базовый URL в зависимости от окружения
+const getBaseUrl = () => {
+  const isDev = import.meta.env.DEV;
+  if (isDev) {
+    // В разработке используем прокси
+    return USE_NEWSAPI ? "/newsapi/v2" : "/api/v1";
+  } else {
+    // В продакшене используем прямые URL
+    return USE_NEWSAPI ? "https://newsapi.org/v2" : "https://api.currentsapi.services/v1";
+  }
+};
+
+const BASE_URL = getBaseUrl();
 
 function getApiKey(): string | undefined {
   const viteKey = import.meta.env.VITE_NEWS_API_KEY;
