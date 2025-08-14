@@ -58,7 +58,7 @@ function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
       title: "Breaking: Revolutionary AI Technology Transforms Healthcare Industry",
       description: "New artificial intelligence system helps doctors diagnose diseases with 99% accuracy, potentially saving millions of lives worldwide.",
       url: "#",
-      urlToImage: "https://via.placeholder.com/400x300/2563eb/ffffff?text=AI+Healthcare",
+      urlToImage: "https://picsum.photos/400/300?random=1",
       author: "Tech Reporter",
       publishedAt: new Date().toISOString(),
       category: ["Technology", "Healthcare"]
@@ -68,7 +68,7 @@ function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
       title: "Climate Change: Scientists Announce Major Breakthrough in Carbon Capture",
       description: "Researchers develop new method that can remove CO2 from atmosphere 10 times more efficiently than previous technologies.",
       url: "#",
-      urlToImage: "https://via.placeholder.com/400x300/059669/ffffff?text=Climate+Tech",
+      urlToImage: "https://picsum.photos/400/300?random=2",
       author: "Environmental Correspondent",
       publishedAt: new Date(Date.now() - 3600000).toISOString(),
       category: ["Environment", "Science"]
@@ -78,7 +78,7 @@ function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
       title: "Space Exploration: Mars Mission Discovers Evidence of Ancient Water Systems",
       description: "NASA rovers find compelling evidence of massive underground water networks that could have supported life millions of years ago.",
       url: "#", 
-      urlToImage: "https://via.placeholder.com/400x300/dc2626/ffffff?text=Mars+Discovery",
+      urlToImage: "https://picsum.photos/400/300?random=3",
       author: "Space Correspondent",
       publishedAt: new Date(Date.now() - 7200000).toISOString(),
       category: ["Space", "Science"]
@@ -88,7 +88,7 @@ function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
       title: "Economic Update: Global Markets Show Strong Recovery Signals",
       description: "International financial experts report positive trends across major economies as inflation rates begin to stabilize.",
       url: "#",
-      urlToImage: "https://via.placeholder.com/400x300/d97706/ffffff?text=Economy+Update",
+      urlToImage: "https://picsum.photos/400/300?random=4",
       author: "Financial Analyst",
       publishedAt: new Date(Date.now() - 10800000).toISOString(),
       category: ["Business", "Economy"]
@@ -98,7 +98,7 @@ function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
       title: "Sports: Championship Finals Set to Break Viewership Records",
       description: "Unprecedented global interest in this year's championship expected to surpass all previous broadcasting milestones.",
       url: "#",
-      urlToImage: "https://via.placeholder.com/400x300/7c3aed/ffffff?text=Sports+News",
+      urlToImage: "https://picsum.photos/400/300?random=5",
       author: "Sports Reporter",
       publishedAt: new Date(Date.now() - 14400000).toISOString(),
       category: ["Sports"]
@@ -108,7 +108,7 @@ function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
       title: "Technology: Quantum Computing Achieves New Milestone",
       description: "Scientists successfully demonstrate quantum supremacy in solving complex mathematical problems impossible for classical computers.",
       url: "#",
-      urlToImage: "https://via.placeholder.com/400x300/1d4ed8/ffffff?text=Quantum+Tech",
+      urlToImage: "https://picsum.photos/400/300?random=6",
       author: "Science Reporter",
       publishedAt: new Date(Date.now() - 18000000).toISOString(),
       category: ["Technology", "Science"]
@@ -118,7 +118,7 @@ function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
       title: "Health: New Treatment Shows Promise for Rare Genetic Disorders",
       description: "Clinical trials reveal groundbreaking gene therapy technique could help thousands of patients with previously untreatable conditions.",
       url: "#",
-      urlToImage: "https://via.placeholder.com/400x300/16a34a/ffffff?text=Medical+News",
+      urlToImage: "https://picsum.photos/400/300?random=7",
       author: "Health Correspondent",
       publishedAt: new Date(Date.now() - 21600000).toISOString(),
       category: ["Health", "Medical"]
@@ -128,7 +128,7 @@ function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
       title: "Education: Digital Learning Platforms Report Record Enrollment",
       description: "Online education continues to grow as institutions worldwide adapt to changing learning preferences and technological advances.",
       url: "#",
-      urlToImage: "https://via.placeholder.com/400x300/ea580c/ffffff?text=Education+Tech",
+      urlToImage: "https://picsum.photos/400/300?random=8",
       author: "Education Reporter",
       publishedAt: new Date(Date.now() - 25200000).toISOString(),
       category: ["Education", "Technology"]
@@ -138,7 +138,7 @@ function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
       title: "Entertainment: Streaming Services Invest Billions in Original Content",
       description: "Major platforms announce unprecedented spending on exclusive shows and movies to compete in the rapidly evolving entertainment landscape.",
       url: "#",
-      urlToImage: "https://via.placeholder.com/400x300/db2777/ffffff?text=Entertainment",
+      urlToImage: "https://picsum.photos/400/300?random=9",
       author: "Entertainment Critic",
       publishedAt: new Date(Date.now() - 28800000).toISOString(),
       category: ["Entertainment", "Media"]
@@ -151,10 +151,17 @@ function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
 export async function getNews(params: { language?: string; page_size?: number; page?: number } = {}) {
   const { language = 'en', page_size = 20, page = 1 } = params;
 
+  // Временно используем только демо-данные из-за ограничений NewsAPI Developer plan
+  const isProduction = import.meta.env.PROD;
+  if (isProduction) {
+    console.log('Using demo data in production due to NewsAPI limitations');
+    return generateFallbackNews(page_size);
+  }
+
   const apiKey = getApiKey();
   if (!apiKey) {
     console.error("Missing Currents API key. Set VITE_NEWS_API_KEY in .env file.");
-    return [];
+    return generateFallbackNews(page_size);
   }
 
   try {
