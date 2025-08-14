@@ -1,12 +1,7 @@
 import { formatDate } from "../../helpers/formatDate"
 import styles from "./Header.module.css"
 
-interface HeaderProps {
-  title: string
-  currentDate?: Date
-}
-
-export const Header: React.FC<HeaderProps> = ({ title }) => {
+export const Header: React.FC = () => {
   return (
     <header className={styles.header}>
       <div className={styles.titleContainer}>

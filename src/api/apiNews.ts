@@ -13,10 +13,10 @@ export interface CurrentsNewsItem {
   published?: string; // "YYYY-MM-DD HH:mm:ss +0000"
   publishedAt?: string; // NewsAPI поле
 }
-interface CurrentsResponse {
-  status: "ok" | "error";
-  news: CurrentsNewsItem[];
-}
+// interface CurrentsResponse {
+//   status: "ok" | "error";
+//   news: CurrentsNewsItem[];
+// }
 
 // Можно переключаться между API
 const USE_NEWSAPI = true; // Переключатель между Currents API и NewsAPI
