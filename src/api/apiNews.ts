@@ -23,8 +23,10 @@ const USE_NEWSAPI = true; // Переключатель между Currents API 
 
 // Определяем базовый URL в зависимости от окружения
 const getBaseUrl = () => {
-  const isDev = import.meta.env.DEV;
-  if (isDev) {
+  const isProduction = import.meta.env.PROD;
+  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  if (isDevelopment && !isProduction) {
     // В разработке используем прокси
     return USE_NEWSAPI ? "/newsapi/v2" : "/api/v1";
   } else {
@@ -35,9 +37,115 @@ const getBaseUrl = () => {
 
 const BASE_URL = getBaseUrl();
 
+// Логируем для отладки
+console.log('Environment check:', {
+  isProduction: import.meta.env.PROD,
+  isDevelopment: typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
+  hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown',
+  baseUrl: BASE_URL
+});
+
 function getApiKey(): string | undefined {
   const viteKey = import.meta.env.VITE_NEWS_API_KEY;
   return viteKey;
+}
+
+// Генерируем фиктивные данные для демонстрации
+function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
+  const demoNews: CurrentsNewsItem[] = [
+    {
+      id: "1",
+      title: "Breaking: Revolutionary AI Technology Transforms Healthcare Industry",
+      description: "New artificial intelligence system helps doctors diagnose diseases with 99% accuracy, potentially saving millions of lives worldwide.",
+      url: "#",
+      urlToImage: "https://via.placeholder.com/400x300/2563eb/ffffff?text=AI+Healthcare",
+      author: "Tech Reporter",
+      publishedAt: new Date().toISOString(),
+      category: ["Technology", "Healthcare"]
+    },
+    {
+      id: "2", 
+      title: "Climate Change: Scientists Announce Major Breakthrough in Carbon Capture",
+      description: "Researchers develop new method that can remove CO2 from atmosphere 10 times more efficiently than previous technologies.",
+      url: "#",
+      urlToImage: "https://via.placeholder.com/400x300/059669/ffffff?text=Climate+Tech",
+      author: "Environmental Correspondent",
+      publishedAt: new Date(Date.now() - 3600000).toISOString(),
+      category: ["Environment", "Science"]
+    },
+    {
+      id: "3",
+      title: "Space Exploration: Mars Mission Discovers Evidence of Ancient Water Systems",
+      description: "NASA rovers find compelling evidence of massive underground water networks that could have supported life millions of years ago.",
+      url: "#", 
+      urlToImage: "https://via.placeholder.com/400x300/dc2626/ffffff?text=Mars+Discovery",
+      author: "Space Correspondent",
+      publishedAt: new Date(Date.now() - 7200000).toISOString(),
+      category: ["Space", "Science"]
+    },
+    {
+      id: "4",
+      title: "Economic Update: Global Markets Show Strong Recovery Signals",
+      description: "International financial experts report positive trends across major economies as inflation rates begin to stabilize.",
+      url: "#",
+      urlToImage: "https://via.placeholder.com/400x300/d97706/ffffff?text=Economy+Update",
+      author: "Financial Analyst",
+      publishedAt: new Date(Date.now() - 10800000).toISOString(),
+      category: ["Business", "Economy"]
+    },
+    {
+      id: "5",
+      title: "Sports: Championship Finals Set to Break Viewership Records",
+      description: "Unprecedented global interest in this year's championship expected to surpass all previous broadcasting milestones.",
+      url: "#",
+      urlToImage: "https://via.placeholder.com/400x300/7c3aed/ffffff?text=Sports+News",
+      author: "Sports Reporter",
+      publishedAt: new Date(Date.now() - 14400000).toISOString(),
+      category: ["Sports"]
+    },
+    {
+      id: "6",
+      title: "Technology: Quantum Computing Achieves New Milestone",
+      description: "Scientists successfully demonstrate quantum supremacy in solving complex mathematical problems impossible for classical computers.",
+      url: "#",
+      urlToImage: "https://via.placeholder.com/400x300/1d4ed8/ffffff?text=Quantum+Tech",
+      author: "Science Reporter",
+      publishedAt: new Date(Date.now() - 18000000).toISOString(),
+      category: ["Technology", "Science"]
+    },
+    {
+      id: "7",
+      title: "Health: New Treatment Shows Promise for Rare Genetic Disorders",
+      description: "Clinical trials reveal groundbreaking gene therapy technique could help thousands of patients with previously untreatable conditions.",
+      url: "#",
+      urlToImage: "https://via.placeholder.com/400x300/16a34a/ffffff?text=Medical+News",
+      author: "Health Correspondent",
+      publishedAt: new Date(Date.now() - 21600000).toISOString(),
+      category: ["Health", "Medical"]
+    },
+    {
+      id: "8",
+      title: "Education: Digital Learning Platforms Report Record Enrollment",
+      description: "Online education continues to grow as institutions worldwide adapt to changing learning preferences and technological advances.",
+      url: "#",
+      urlToImage: "https://via.placeholder.com/400x300/ea580c/ffffff?text=Education+Tech",
+      author: "Education Reporter",
+      publishedAt: new Date(Date.now() - 25200000).toISOString(),
+      category: ["Education", "Technology"]
+    },
+    {
+      id: "9",
+      title: "Entertainment: Streaming Services Invest Billions in Original Content",
+      description: "Major platforms announce unprecedented spending on exclusive shows and movies to compete in the rapidly evolving entertainment landscape.",
+      url: "#",
+      urlToImage: "https://via.placeholder.com/400x300/db2777/ffffff?text=Entertainment",
+      author: "Entertainment Critic",
+      publishedAt: new Date(Date.now() - 28800000).toISOString(),
+      category: ["Entertainment", "Media"]
+    }
+  ];
+
+  return demoNews.slice(0, count);
 }
 
 export async function getNews(params: { language?: string; page_size?: number; page?: number } = {}) {
@@ -78,6 +186,8 @@ export async function getNews(params: { language?: string; page_size?: number; p
       console.error('API rate limit exceeded. Please wait or check your API plan.');
     }
     
-    return [];
+    // В случае ошибки возвращаем фиктивные данные для демонстрации
+    console.log('Returning fallback demo data...');
+    return generateFallbackNews(page_size);
   }
 }
