@@ -1,0 +1,27 @@
+#root {
+  max-width: 1400px;
+  margin: 0 auto;
+  background-color: var(--white);
+  min-height: 100vh;
+}
+
+.app-container {
+  background-color: var(--white);
+  border-left: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  min-height: 100vh;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  #root {
+    max-width: 100%;
+  }
+  
+  .app-container {
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+}
