@@ -43,7 +43,9 @@ console.log('Environment check:', {
   isProduction: import.meta.env.PROD,
   isDevelopment: typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
   hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown',
-  baseUrl: BASE_URL
+  baseUrl: BASE_URL,
+  useNewsApi: USE_NEWSAPI,
+  mode: import.meta.env.MODE
 });
 
 function getApiKey(): string | undefined {

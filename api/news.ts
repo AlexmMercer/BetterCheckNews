@@ -1,6 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log('API called with method:', req.method);
+  console.log('Query params:', req.query);
+  
   // Разрешаем только GET запросы
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
