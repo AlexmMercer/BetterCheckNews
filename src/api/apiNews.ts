@@ -28,6 +28,7 @@ export interface NewsApiResponse {
 
 // Можно переключаться между API
 const USE_NEWSAPI = true; // Переключатель между Currents API и NewsAPI
+const USE_DEBUG_ENDPOINT = true; // Временно используем debug endpoint
 
 // Определяем базовый URL в зависимости от окружения
 const getBaseUrl = () => {
@@ -201,7 +202,7 @@ export async function getNews(params: { language?: string; page_size?: number; p
         
       } else {
         // В продакшене используем наш Vercel API прокси
-        const endpoint = 'news'; // наш API endpoint
+        const endpoint = USE_DEBUG_ENDPOINT ? 'news-simple' : 'news'; // используем простую версию для отладки
         const requestParams = { pageSize: page_size, page, country: 'us' };
         
         console.log('Making request to:', `${BASE_URL}/${endpoint}`);

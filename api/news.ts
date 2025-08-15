@@ -1,15 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  console.log('API called with method:', req.method);
-  console.log('Query params:', req.query);
-  
-  // Разрешаем только GET запросы
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  // Добавляем CORS заголовки в самом начале
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   try {
+    console.log('API called with method:', req.method);
+    console.log('Query params:', req.query);
+    
+    // Разрешаем только GET запросы
+    if (req.method !== 'GET') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     const { page = '1', pageSize = '11', country = 'us' } = req.query;
     
     // Пробуем разные варианты названий переменных окружения
@@ -52,11 +57,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const data = await response.json() as { totalResults?: number; articles?: any[]; [key: string]: any };
-    
-    // Добавляем CORS заголовки
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     
     // Возвращаем данные с метаинформацией
     const pageNum = parseInt(String(page));
