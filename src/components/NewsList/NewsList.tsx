@@ -9,7 +9,7 @@ export interface NewsListItem {
 }
 
 export const NewsList = ({ news }: { news: NewsListItem[] }) => {
-  if (!news.length) return <p>No news available.</p>;
+  if (!news.length) return null;
 
   return (
     <div className={styles.newsList}>

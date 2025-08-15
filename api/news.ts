@@ -10,11 +10,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { page = '1', pageSize = '9', country = 'us' } = req.query;
-    const apiKey = process.env.VITE_NEWS_API_KEY;
+    const { page = '1', pageSize = '11', country = 'us' } = req.query;
+    
+    // Пробуем разные варианты названий переменных окружения
+    const apiKey = process.env.VITE_NEWS_API_KEY || 
+                   process.env.NEWS_API_KEY || 
+                   process.env.NEWSAPI_KEY;
+
+    console.log('Environment check:', {
+      VITE_NEWS_API_KEY: !!process.env.VITE_NEWS_API_KEY,
+      NEWS_API_KEY: !!process.env.NEWS_API_KEY,
+      NEWSAPI_KEY: !!process.env.NEWSAPI_KEY,
+      hasApiKey: !!apiKey
+    });
 
     if (!apiKey) {
-      return res.status(500).json({ error: 'API key not configured' });
+      return res.status(500).json({ 
+        error: 'API key not configured',
+        hint: 'Set VITE_NEWS_API_KEY, NEWS_API_KEY, or NEWSAPI_KEY in Vercel environment variables'
+      });
     }
 
     // Построим URL для NewsAPI
@@ -37,15 +51,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const data = await response.json();
+    const data = await response.json() as { totalResults?: number; articles?: any[]; [key: string]: any };
     
     // Добавляем CORS заголовки
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     
-    // Возвращаем данные
-    return res.status(200).json(data);
+    // Возвращаем данные с метаинформацией
+    const pageNum = parseInt(String(page));
+    const pageSizeNum = parseInt(String(pageSize));
+    const totalResults = data.totalResults || 0;
+    const totalPages = Math.ceil(totalResults / pageSizeNum);
+    
+    return res.status(200).json({
+      articles: data.articles || [],
+      totalResults: data.totalResults || 0,
+      status: data.status || 'ok',
+      pagination: {
+        currentPage: pageNum,
+        pageSize: pageSizeNum,
+        totalResults,
+        totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
+      }
+    });
 
   } catch (error) {
     console.error('API Error:', error);

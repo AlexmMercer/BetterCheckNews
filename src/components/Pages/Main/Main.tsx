@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getNews } from "../../../api/apiNews";
+import { getNews, type NewsApiResponse } from "../../../api/apiNews";
 import { NewsList, type NewsListItem } from "../../NewsList/NewsList";
 import { NewsBanner } from "../../NewsBanner/NewsBanner";
 import { NewsGrid } from "../../NewsGrid/NewsGrid";
@@ -12,21 +12,21 @@ export const MainPage = () => {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+  const [paginationInfo, setPaginationInfo] = useState<NewsApiResponse['pagination'] | null>(null);
 
   useEffect(() => {
     console.log('Loading page:', currentPage);
     (async () => {
       try {
         setLoading(true);
-        const raw = await getNews({ 
+        const response = await getNews({ 
           page: currentPage, 
-          page_size: 9 // баннер(1) + список(2) + грид(6) = 9 новостей на страницу
+          page_size: 11 // баннер(1) + список(2) + грид(8) = 11 новостей на страницу
         });
-        console.log('Got news data:', raw);
+        console.log('Got news data:', response);
         
         // нормализуем под NewsList
-        const normalized: NewsListItem[] = raw.map((n: any) => ({
+        const normalized: NewsListItem[] = response.articles.map((n: any) => ({
           id: n.id || n.url, // NewsAPI может не иметь id
           title: n.title,
           url: n.url,
@@ -35,11 +35,19 @@ export const MainPage = () => {
         
         // простейшая дедупликация по url, чтобы не было дублей
         const uniq = Array.from(new Map(normalized.map(n => [n.url || n.id, n])).values());
-        setItems(uniq);
         
-        // Для демонстрации пагинации зададим общее количество страниц
-        // В реальном API это должно приходить от сервера
-        setTotalPages(10); // Пока зададим 10 страниц для теста
+        // Проверяем, есть ли новости на текущей странице
+        if (uniq.length === 0 && currentPage > 1) {
+          // Если нет новостей на текущей странице, переходим на последнюю страницу с новостями
+          // Ограничиваем количество страниц до реально доступных
+          const maxPageWithNews = Math.ceil((response.pagination?.totalResults || 0) / 11);
+          const targetPage = Math.min(currentPage - 1, maxPageWithNews);
+          setCurrentPage(Math.max(1, targetPage));
+          return;
+        }
+        
+        setItems(uniq);
+        setPaginationInfo(response.pagination || null);
         
       } catch (e: any) {
         setErr(e?.message || "Failed to load news");
@@ -59,7 +67,7 @@ export const MainPage = () => {
         </div>
         
         {/* Скелетон грид секции */}
-        <NewsGridSkeleton count={6} />
+        <NewsGridSkeleton count={8} />
       </div>
     );
   }
@@ -86,13 +94,18 @@ export const MainPage = () => {
       )}
       
       {/* Пагинация */}
-      {totalPages > 1 && (
+      {paginationInfo && paginationInfo.totalPages > 1 && (
         <section className={styles.paginationSection}>
           <Pagination
-            total={totalPages * 9} // общее количество новостей (примерное)
-            pageSize={9} // размер страницы
+            total={paginationInfo.totalResults} // реальное общее количество новостей
+            pageSize={paginationInfo.pageSize} // размер страницы
             current={currentPage} // текущая страница из state
-            onChange={setCurrentPage} // обновляем state при клике
+            onChange={(page) => {
+              // Ограничиваем переход только на страницы с новостями
+              const maxPage = Math.ceil(paginationInfo.totalResults / paginationInfo.pageSize);
+              const targetPage = Math.min(page, maxPage);
+              setCurrentPage(Math.max(1, targetPage));
+            }}
           />
         </section>
       )}

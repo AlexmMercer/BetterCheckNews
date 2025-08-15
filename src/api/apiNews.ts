@@ -13,10 +13,18 @@ export interface CurrentsNewsItem {
   published?: string; // "YYYY-MM-DD HH:mm:ss +0000"
   publishedAt?: string; // NewsAPI поле
 }
-// interface CurrentsResponse {
-//   status: "ok" | "error";
-//   news: CurrentsNewsItem[];
-// }
+
+export interface NewsApiResponse {
+  articles: CurrentsNewsItem[];
+  pagination?: {
+    currentPage: number;
+    pageSize: number;
+    totalResults: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
 
 // Можно переключаться между API
 const USE_NEWSAPI = true; // Переключатель между Currents API и NewsAPI
@@ -54,105 +62,104 @@ function getApiKey(): string | undefined {
 }
 
 // Генерируем фиктивные данные для демонстрации
-function generateFallbackNews(count: number = 9): CurrentsNewsItem[] {
-  const demoNews: CurrentsNewsItem[] = [
+function generateFallbackNews(count: number = 9, page: number = 1): CurrentsNewsItem[] {
+  // Создаем большой набор новостей для демонстрации пагинации
+  const allDemoNews: CurrentsNewsItem[] = [];
+  
+  const newsTemplates = [
     {
-      id: "1",
       title: "Breaking: Revolutionary AI Technology Transforms Healthcare Industry",
-      description: "New artificial intelligence system helps doctors diagnose diseases with 99% accuracy, potentially saving millions of lives worldwide.",
-      url: "#",
-      urlToImage: "https://picsum.photos/400/300?random=1",
-      author: "Tech Reporter",
-      publishedAt: new Date().toISOString(),
+      description: "New artificial intelligence system helps doctors diagnose diseases with high accuracy.",
       category: ["Technology", "Healthcare"]
     },
     {
-      id: "2", 
       title: "Climate Change: Scientists Announce Major Breakthrough in Carbon Capture",
-      description: "Researchers develop new method that can remove CO2 from atmosphere 10 times more efficiently than previous technologies.",
-      url: "#",
-      urlToImage: "https://picsum.photos/400/300?random=2",
-      author: "Environmental Correspondent",
-      publishedAt: new Date(Date.now() - 3600000).toISOString(),
+      description: "Researchers develop new method that can remove CO2 from atmosphere efficiently.",
       category: ["Environment", "Science"]
     },
     {
-      id: "3",
       title: "Space Exploration: Mars Mission Discovers Evidence of Ancient Water Systems",
-      description: "NASA rovers find compelling evidence of massive underground water networks that could have supported life millions of years ago.",
-      url: "#", 
-      urlToImage: "https://picsum.photos/400/300?random=3",
-      author: "Space Correspondent",
-      publishedAt: new Date(Date.now() - 7200000).toISOString(),
+      description: "NASA rovers find compelling evidence of massive underground water networks.",
       category: ["Space", "Science"]
     },
     {
-      id: "4",
       title: "Economic Update: Global Markets Show Strong Recovery Signals",
-      description: "International financial experts report positive trends across major economies as inflation rates begin to stabilize.",
-      url: "#",
-      urlToImage: "https://picsum.photos/400/300?random=4",
-      author: "Financial Analyst",
-      publishedAt: new Date(Date.now() - 10800000).toISOString(),
+      description: "International financial experts report positive trends across major economies.",
       category: ["Business", "Economy"]
     },
     {
-      id: "5",
       title: "Sports: Championship Finals Set to Break Viewership Records",
-      description: "Unprecedented global interest in this year's championship expected to surpass all previous broadcasting milestones.",
-      url: "#",
-      urlToImage: "https://picsum.photos/400/300?random=5",
-      author: "Sports Reporter",
-      publishedAt: new Date(Date.now() - 14400000).toISOString(),
+      description: "Unprecedented global interest in this year's championship expected.",
       category: ["Sports"]
     },
     {
-      id: "6",
       title: "Technology: Quantum Computing Achieves New Milestone",
-      description: "Scientists successfully demonstrate quantum supremacy in solving complex mathematical problems impossible for classical computers.",
-      url: "#",
-      urlToImage: "https://picsum.photos/400/300?random=6",
-      author: "Science Reporter",
-      publishedAt: new Date(Date.now() - 18000000).toISOString(),
+      description: "Scientists successfully demonstrate quantum supremacy in complex calculations.",
       category: ["Technology", "Science"]
     },
     {
-      id: "7",
       title: "Health: New Treatment Shows Promise for Rare Genetic Disorders",
-      description: "Clinical trials reveal groundbreaking gene therapy technique could help thousands of patients with previously untreatable conditions.",
-      url: "#",
-      urlToImage: "https://picsum.photos/400/300?random=7",
-      author: "Health Correspondent",
-      publishedAt: new Date(Date.now() - 21600000).toISOString(),
+      description: "Clinical trials reveal groundbreaking gene therapy technique.",
       category: ["Health", "Medical"]
     },
     {
-      id: "8",
       title: "Education: Digital Learning Platforms Report Record Enrollment",
-      description: "Online education continues to grow as institutions worldwide adapt to changing learning preferences and technological advances.",
-      url: "#",
-      urlToImage: "https://picsum.photos/400/300?random=8",
-      author: "Education Reporter",
-      publishedAt: new Date(Date.now() - 25200000).toISOString(),
+      description: "Online education continues to grow as institutions adapt.",
       category: ["Education", "Technology"]
     },
     {
-      id: "9",
       title: "Entertainment: Streaming Services Invest Billions in Original Content",
-      description: "Major platforms announce unprecedented spending on exclusive shows and movies to compete in the rapidly evolving entertainment landscape.",
-      url: "#",
-      urlToImage: "https://picsum.photos/400/300?random=9",
-      author: "Entertainment Critic",
-      publishedAt: new Date(Date.now() - 28800000).toISOString(),
+      description: "Major platforms announce unprecedented spending on exclusive shows.",
       category: ["Entertainment", "Media"]
     }
   ];
+  
+  // Генерируем 66 новостей для демонстрации пагинации (6 страниц по 11 новостей)
+  for (let i = 0; i < 66; i++) {
+    const template = newsTemplates[i % newsTemplates.length];
+    const pageVariation = Math.floor(i / 11) + 1; // Для разных страниц
+    
+    allDemoNews.push({
+      id: `${i + 1}`,
+      title: `Page ${pageVariation}: ${template.title}`,
+      description: template.description,
+      url: "#",
+      urlToImage: `https://picsum.photos/400/300?random=${i + 1}`,
+      author: "Demo Reporter",
+      publishedAt: new Date(Date.now() - (i * 3600000)).toISOString(),
+      category: template.category
+    });
+  }
+  
+  // Возвращаем новости для конкретной страницы
+  const startIndex = (page - 1) * count;
+  const endIndex = startIndex + count;
+  const demoNews = allDemoNews.slice(startIndex, endIndex);
 
   return demoNews.slice(0, count);
 }
 
-export async function getNews(params: { language?: string; page_size?: number; page?: number } = {}) {
-  const { language = 'en', page_size = 20, page = 1 } = params;
+// Создаем фиктивную пагинацию для демо данных
+function createFallbackPagination(page: number, pageSize: number, availableNewsCount: number = 11) {
+  // Для демо данных у нас есть 66 новостей всего
+  const totalDemoNews = 66;
+  const totalResults = Math.min(totalDemoNews, Math.max(availableNewsCount, pageSize * page));
+  
+  // Убеждаемся, что мы не создаем пустых страниц
+  const actualTotalPages = Math.max(1, Math.ceil(totalResults / pageSize));
+  
+  return {
+    currentPage: page,
+    pageSize: pageSize,
+    totalResults: totalResults,
+    totalPages: actualTotalPages,
+    hasNextPage: page < actualTotalPages,
+    hasPrevPage: page > 1
+  };
+}
+
+export async function getNews(params: { language?: string; page_size?: number; page?: number } = {}): Promise<NewsApiResponse> {
+  const { language = 'en', page_size = 11, page = 1 } = params;
 
   try {
     const isProduction = import.meta.env.PROD;
@@ -165,7 +172,11 @@ export async function getNews(params: { language?: string; page_size?: number; p
         const apiKey = getApiKey();
         if (!apiKey) {
           console.error("Missing NewsAPI key. Set VITE_NEWS_API_KEY in .env file.");
-          return generateFallbackNews(page_size);
+          const articles = generateFallbackNews(page_size, page);
+          return {
+            articles,
+            pagination: createFallbackPagination(page, page_size, 66) // 66 - общее количество демо новостей
+          };
         }
 
         const endpoint = 'top-headlines';
@@ -180,7 +191,13 @@ export async function getNews(params: { language?: string; page_size?: number; p
         });
         
         console.log('Response:', res.data);
-        return res.data.articles ?? [];
+        
+        // Если это разработка с фиктивными данными, создаем пагинацию
+        const articles = res.data.articles ?? [];
+        return {
+          articles,
+          pagination: createFallbackPagination(page, page_size, 66) // Фиксированное количество для демо
+        };
         
       } else {
         // В продакшене используем наш Vercel API прокси
@@ -196,14 +213,23 @@ export async function getNews(params: { language?: string; page_size?: number; p
         });
         
         console.log('Response:', res.data);
-        return res.data.articles ?? [];
+        
+        // Возвращаем данные с пагинацией от сервера
+        return {
+          articles: res.data.articles ?? [],
+          pagination: res.data.pagination
+        };
       }
     } else {
       // Currents API логика (если нужна)
       const apiKey = getApiKey();
       if (!apiKey) {
         console.error("Missing Currents API key.");
-        return generateFallbackNews(page_size);
+        const articles = generateFallbackNews(page_size, page);
+        return {
+          articles,
+          pagination: createFallbackPagination(page, page_size, 50) // 50 - общее количество демо новостей
+        };
       }
 
       const endpoint = 'latest-news';
@@ -214,7 +240,11 @@ export async function getNews(params: { language?: string; page_size?: number; p
         params: requestParams,
       });
       
-      return res.data.news ?? [];
+      const articles = res.data.news ?? [];
+      return {
+        articles,
+        pagination: createFallbackPagination(page, page_size, 66) // Для Currents API тоже используем 66
+      };
     }
   } catch (err) {
     const e = err as AxiosError<{ message?: string }>;
@@ -228,6 +258,10 @@ export async function getNews(params: { language?: string; page_size?: number; p
     
     // В случае ошибки возвращаем фиктивные данные
     console.log('Returning fallback demo data due to API error...');
-    return generateFallbackNews(page_size);
+    const articles = generateFallbackNews(page_size, page);
+    return {
+      articles,
+      pagination: createFallbackPagination(page, page_size, 50) // 50 - общее количество демо новостей
+    };
   }
 }
